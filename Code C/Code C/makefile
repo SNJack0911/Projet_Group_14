@@ -12,8 +12,9 @@ OBJ_MAIN_PART_1= $(SRC_MAIN_PART_1:.c=.o)
 OBJ_METHOD_1= $(SRC_METHOD_1:.c=.o)
 
 ECHO = @
+
 ifeq ($(VERBOSE),1)
-	ECHO =
+	ECHO=
 endif
 
 ifeq ($(DEBUG),yes)
@@ -29,10 +30,11 @@ ifeq ($(DEBUG),yes)
 	@echo "Debug mode"
 else
 	@echo "Release mode"
-endif
-	@$(MAKE) $(EXEC)
+=======
+	@echo "Generating in debug mode"
+else
+	@echo "Generating in release mode"
 
-%.o: %.c
 	$(ECHO)$(CC) -o $@ -c $< $(CFLAGS)  
 
 $(EXEC_MAIN_PART_1):$(OBJ_MAIN_PART_1)
