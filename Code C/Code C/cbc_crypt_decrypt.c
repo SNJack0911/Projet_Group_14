@@ -21,21 +21,23 @@ char bloc_chiffre_dc[LEN_BLOC];
 bool first_bloc = true;
 
 
-/* Fonctions cryptages */
+/* Fonctions cryptage */
+
 
 int construct_crypt_message(){
-    // Affichage du bloc chiffré en hexadécimal pour le débogage (facultatif)
-    afficher_bloc_hex(bloc_chiffre, LEN_BLOC);
     // Écriture directe des octets chiffrés dans le fichier binaire
+    
+    afficher_bloc_hex(bloc_chiffre, LEN_BLOC);
     if (fwrite(bloc_chiffre, 1, LEN_BLOC, message_chiffre) != LEN_BLOC) {
         perror("Erreur write");
         return 6;
     }
-
     return 0;
 }
 
 void chiffrer_message(char * vecteur,char * key){
+    // Cryptage du bloc clair avec la méthode de chiffrage XOR
+    
     char bloc_middle[LEN_BLOC];
     int i;
     if(first_bloc){
@@ -54,6 +56,19 @@ void chiffrer_message(char * vecteur,char * key){
 }
 
 int cbc_crypt(char *fichier_clair, char * vecteur, char * key, char * fichier_chiffre) {
+    /* Fonction principale de cryptage 
+
+    Param
+    fichier_clair : fichier clair dont le contenu va être crypté,
+    vecteur : vecteur d'initialisation de taille 16o,
+    key : clé de  chiffrement,
+    fichier_chiffre : fichier dans lequel sera écrit le contenu crypté,
+
+    Cette fonction ouvre fichier_clair et litson contenu, par bloc de 16o.
+    A chaque lecture, le bloc lu va être crypté par la fonction chiffrer_message 
+    et écrit dans fichier_chiffre
+    */
+    
     printf("Ouverture fichiers\n");
     message_clair = fopen(fichier_clair, "rb");
     message_chiffre = fopen(fichier_chiffre, "wb");
@@ -96,9 +111,11 @@ int cbc_crypt(char *fichier_clair, char * vecteur, char * key, char * fichier_ch
     return 0;
 }
 
-/* Fonctions déchiffrements */
+/* Fonctions décryptage */
 
 void dechiffrer_message(char *vecteur, char *key){
+    // Decryptage du bloc chiffre avec la méthode de chiffrage XOR
+    
     char bloc_middle_dc[LEN_BLOC];
     int i;
 
@@ -122,6 +139,8 @@ void dechiffrer_message(char *vecteur, char *key){
 }
 
 int construct_decrypt_message() {
+    // Écriture directe des octets déchiffrés dans le fichier binaire
+    
     bloc_clair_dc[LEN_BLOC] = '\0';
     printf("Bloc clair : %s\n", bloc_clair_dc);
     if (fwrite(bloc_clair_dc, 1, LEN_BLOC, message_clair) != LEN_BLOC) {
@@ -132,6 +151,19 @@ int construct_decrypt_message() {
 }
 
 int cbc_uncrypt(char *fichier_chiffre, char *vecteur, char *key, char *fichier_dechiffre) {
+    /* Fonction principale de décryptage 
+
+    Param
+    fichier_chiffre : fichier crypté dont le contenu va être décrypté,
+    vecteur : vecteur d'initialisation de taille 16o,
+    key : clé de déchiffrement identique à celle utilisée pour le chiffrement ,
+    fichier_dechiffre : fichier dans lequel sera écrit le contenu décrypté,
+
+    Cette fonction ouvre fichier_chiffre et lit son contenu, par bloc de 16o.
+    A chaque lecture, le bloc lu va être décrypter par la fonction dechiffrer_message 
+    et écrit dans fichier_dechiffre
+    */
+    
     printf("Ouverture fichiers\n");
     message_chiffre = fopen(fichier_chiffre, "rb");
     message_clair = fopen(fichier_dechiffre, "wb");
