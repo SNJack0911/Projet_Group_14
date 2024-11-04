@@ -21,7 +21,7 @@ unsigned char *gen_key_mask(int length) {
 }
 
 void get_key(unsigned char *key, int length) {
-    FILE *fd = fopen("keyfile.txt", "r+");  // Open file in read+write mode
+    FILE *fd = fopen("key.txt", "r+");  // Open file in read+write mode
     if (fd == NULL) {
         perror("Error opening file");
         exit(EXIT_FAILURE);
@@ -39,6 +39,7 @@ void get_key(unsigned char *key, int length) {
         fwrite(new_key, sizeof(unsigned char), length, fd);
         fclose(fd);
         free(new_key);
+        new_key=NULL;
     } else {
         // File contains data, check if it's the correct length
         size_t bytesRead = fread(key, sizeof(unsigned char), (size_t)length, fd);
@@ -50,7 +51,7 @@ void get_key(unsigned char *key, int length) {
         fclose(fd);
 
         // Truncate the file to clear the key
-        fd = fopen("keyfile.txt", "w");  // Reopen in write mode to truncate
+        fd = fopen("key.txt", "w");  // Reopen in write mode to truncate
         if (fd) {
             fclose(fd);
         } else {
@@ -61,15 +62,22 @@ void get_key(unsigned char *key, int length) {
 }
 
 // Function to perform XOR encryption with a one-time pad (mask jetable)
-void mask_jetable(const char *msg, char *crypted,int key_length) {
-    unsigned char key[key_length + 1];
-    get_key(key, key_length);
-
+void mask_jetable(const char *msg, char *crypted, int key_length, char *key) {
+    unsigned char buffer_key[key_length + 1];
+    
+    // Generate a new key if key is NULL or insufficient length
+    if (key == NULL || strlen(key) < (size_t)key_length) {
+        fprintf(stdout, "Error: Input Key or Key File is not the required specification, using a newly generated key\n");
+        get_key(buffer_key, key_length);
+        buffer_key[key_length] = '\0';  // Null-terminate the generated key
+        key = (char *)buffer_key;  // Use the generated key
+        fprintf(stdout, "New key is store at test_file/keyfile.txt\n");
+    }
     // Encrypt the message
     for (int i = 0; i < key_length; i++) {    
         crypted[i] = msg[i] ^ key[i];
     }
-    crypted[key_length] = '\0';  // Null-terminate the encrypted message
+    crypted[key_length] = '\0';  // Null-terminate
 }
 
 // Function to test the mask_jetable encryption and decryption
@@ -80,7 +88,7 @@ void test_mask_jetable(const char *msg) {
 
     // Encrypt the message
     printf("Message init : %s\n", msg);
-    mask_jetable(msg, crypte,msg_length);
+    mask_jetable(msg, crypte,msg_length,"ajawbcjab");
     printf("Message crypte :");
 
     // Print encrypted message in hexadecimal to make it readable
@@ -89,7 +97,7 @@ void test_mask_jetable(const char *msg) {
     }
     printf("\n");
     // Decrypt the message
-    mask_jetable(crypte, decrypte,msg_length);
+    mask_jetable(crypte, decrypte,msg_length,"ajawbcjab");
     printf("Message decrypte: %s\n", decrypte);
 
     // Verify if the decryption matches the original message
@@ -100,13 +108,12 @@ void test_mask_jetable(const char *msg) {
     }
 }
 
-int main(int argc, char *argv[]) {
-    if (argc >2){
-        fprintf(stderr,"Too much arg");
-        return -1;
-    }
-    const char *msg = argv[1]; 
-    test_mask_jetable(msg);
-    return 0;
-}
- 
+// int main(int argc, char *argv[]) {
+//     if (argc >2){
+//         fprintf(stderr,"Too much arg");
+//         return -1;
+//     }
+//     const char *msg = argv[1]; 
+//     test_mask_jetable(msg);
+//     return 0;
+// }

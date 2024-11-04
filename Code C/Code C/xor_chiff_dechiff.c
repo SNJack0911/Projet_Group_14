@@ -5,9 +5,8 @@
 
 #include "fonctions_annexes.h"
 
-void xor_encrypt_decrypt(const char *msg, unsigned char* key, char *crypted){
+void xor_encrypt_decrypt(const char *msg, unsigned char* key, char *crypted, int len_msg) {
 
-    int len_msg = strlen((char*)msg);
     int len_key = strlen((char*)key);
     int index_key = 0;
     for (int i = 0; i < len_msg; i++){    
@@ -33,11 +32,11 @@ void test_xor() {
     
     // Crypt
     printf("Message init : %s\n", texte);
-    xor_encrypt_decrypt(texte, key, crypte);
+    xor_encrypt_decrypt(texte, key, crypte, strlen(texte));
     printf("Message crypte : %s\n", crypte);
     
     // Decrypt 
-    xor_encrypt_decrypt(crypte, key, decrypte);
+    xor_encrypt_decrypt(crypte, key, decrypte, strlen(texte));
     printf("Message decrypte: %s\n", decrypte);
 
     // Verify the decryption matches the original plaintext
@@ -47,5 +46,6 @@ void test_xor() {
         printf("XOR Test Non-valide: Decryption mauvais\n");
     }
     free(key);
+    key=NULL;
 }
 

@@ -3,19 +3,19 @@ CFLAGS = -std=c99 -Werror -Wextra -Wall -pedantic
 LDFLAGS =
 
 EXEC_MAIN_PART_1 = sym_crypt
-EXEC_METHOD_1 = function_xor
-EXEC_METHOD_1_EXT = mask_jetable
-EXEC_METHOD_2 = function_cbc
+# EXEC_METHOD_1 = function_xor
+# EXEC_METHOD_1_EXT = mask_jetable
+# EXEC_METHOD_2 = function_cbc
 
 SRC_MAIN_PART_1 = cbc_crypt_decrypt.c xor_chiff_dechiff.c sym_crypt.c masque_jetable.c
-SRC_METHOD_1 = xor_chiff_dechiff.c
-SRC_METHOD_1_EXT = masque_jetable.c
-SRC_METHOD_2 = cbc_crypt_decrypt.c
+# SRC_METHOD_1 = xor_chiff_dechiff.c
+# SRC_METHOD_1_EXT = masque_jetable.c
+# SRC_METHOD_2 = cbc_crypt_decrypt.c
 
 OBJ_MAIN_PART_1 = $(SRC_MAIN_PART_1:.c=.o)
-OBJ_METHOD_1 = $(SRC_METHOD_1:.c=.o)
-OBJ_METHOD_1_EXT = $(SRC_METHOD_1_EXT:.c=.o)
-OBJ_METHOD_2 = $(SRC_METHOD_2:.c=.o)
+# OBJ_METHOD_1 = $(SRC_METHOD_1:.c=.o)
+# OBJ_METHOD_1_EXT = $(SRC_METHOD_1_EXT:.c=.o)
+# OBJ_METHOD_2 = $(SRC_METHOD_2:.c=.o)
 
 ECHO = @
 
