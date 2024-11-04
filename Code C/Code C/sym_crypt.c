@@ -26,6 +26,8 @@ int main(int argc, char *argv[]) {
     char *key_file = NULL;
     char *method = NULL;
     char *vector_file = NULL;
+    FILE *input;
+    FILE *output;
 
     while ((opt = getopt(argc, argv, "i:o:k:f:m:v:h")) != -1) {
         switch (opt) {
@@ -77,15 +79,13 @@ int main(int argc, char *argv[]) {
     }
 
     // Open input file
-    FILE *input = fopen(input_file, "r");
-    if (input == NULL) {
+    if ((input = fopen(input_file, "r")) == NULL) {
         fprintf(stderr, "Failed to open input file\n");
         return 1;
     }
 
     // Open output file
-    FILE *output = fopen(output_file, "w");
-    if (output == NULL) {
+    if ((output= fopen(output_file, "w")) == NULL) {
         fprintf(stderr, "Failed to open output file\n");
         fclose(input);
         return 1;

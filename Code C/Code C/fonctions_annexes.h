@@ -19,6 +19,6 @@ int cbc_uncrypt(char *fichier_chiffre, char *vecteur, char *key, char *fichier_d
 
 //Les fonctions de test
 void test_xor();
-void test_masque_jetable();
+void test_masque_jetable(const char *msg );
 
 #endif

@@ -13,11 +13,11 @@
 FILE *message_clair;
 FILE *message_chiffre;
 char bloc_clair[LEN_BLOC+1];
-char bloc_clair_dc[LEN_BLOC];
-char bloc_prec[LEN_BLOC];
-char bloc_prec_dc[LEN_BLOC];
-char bloc_chiffre[LEN_BLOC];
-char bloc_chiffre_dc[LEN_BLOC];
+char bloc_clair_dc[LEN_BLOC+1];
+char bloc_prec[LEN_BLOC+1];
+char bloc_prec_dc[LEN_BLOC+1];
+char bloc_chiffre[LEN_BLOC+1];
+char bloc_chiffre_dc[LEN_BLOC+1];
 bool first_bloc = true;
 
 /* Fonctions pour la methode 2*/
