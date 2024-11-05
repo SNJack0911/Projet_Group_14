@@ -229,5 +229,63 @@ int cbc_uncrypt(char *fichier_chiffre, char *vecteur, char *key, char *fichier_d
     fclose(message_clair);
     return 0;
 }
+void test_cbc(){
+    // Fonction de test de la méthode de chiffrement/déchiffrement CBC
+    
+    char *key = (char *)gen_key(LEN_BLOC);
+    printf("Key : %s\n", key);
+    char vecteur[LEN_BLOC] = "abcdefghijklmnop";
+    
+    // Cryptage
+    printf("Cryptage CBC fiche : msg1.txt\n");
+    cbc_crypt("test_files/msg1.txt", vecteur, key, "encrypted_files/cbc_msg1_crypt.txt");
+    
+    // Décryptage
+    cbc_uncrypt("encrypted_files/cbc_msg1_crypt.txt", vecteur, key, "decrypted_files/cbc_decrypt_msg1.txt");
+    
+    // Vérification du déchiffrement
+    FILE *fichier_clair = fopen("test_files/msg1.txt", "r");
+    FILE *fichier_dechiffre = fopen("decrypted_files/cbc_decrypt_msg1.txt", "r");
+    if (!fichier_clair || !fichier_dechiffre) {
+        perror("Erreur ouverture fichier");
+        return;
+    }
+    
+    char buffer_clair[256];
+    char buffer_dechiffre[256];
+    // Read the original (plaintext) file
+    if (fgets(buffer_clair, 256, fichier_clair) == NULL) {
+        perror("Erreur de lecture du fichier original");
+        fclose(fichier_clair);
+        fclose(fichier_dechiffre);
+        free(key);
+        key = NULL;
+        return;
+    }
 
+    // Read the decrypted file
+    if (fgets(buffer_dechiffre, 256, fichier_dechiffre) == NULL) {
+        perror("Erreur de lecture du fichier déchiffré");
+        fclose(fichier_clair);
+        fclose(fichier_dechiffre);
+        free(key);
+        key = NULL;
+        return;
+}
+    
+    if (strcmp(buffer_clair, buffer_dechiffre) == 0) {
+        printf("Test CBC Valide: Déchiffrement identique au message initial.\n");
+    } else {
+        printf("Test CBC Non-valide: Déchiffrement incorrect.\n");
+    }
+    
+    fclose(fichier_clair);
+    fclose(fichier_dechiffre);
+    free(key);
+    key = NULL;
+}
+// int main(void){
+//     test_cbc();
+//     return 0;
+// }
 

@@ -48,4 +48,8 @@ void test_xor() {
     free(key);
     key=NULL;
 }
+// int main (void) {
+//     test_xor();
+//     return 0;
+// }
 
