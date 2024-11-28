@@ -1,9 +1,22 @@
 import threading
 import queue
 import time
+import sys
+import argparse
 
-def getPandG():
-    with open("fichier.txt.txt", "r", encoding="utf-8") as fichier:
+if len(sys.argv) != 5:
+    print("Usage: python3 dh_genkey.py -i <file_name> -o <file_name>")
+    sys.exit(1)
+parser = argparse.ArgumentParser()
+parser.add_argument("-i", "--input",required=True,help="Input file name")
+parser.add_argument("-o", "--output",required=True,help="Output file name")
+args = parser.parse_args()
+input_file = args.input
+output_file = args.output
+
+
+def getPandG(file_name):
+    with open(file_name, "r", encoding="utf-8") as fichier:
         return fichier.readlines()
 
 def puissance_mod_n(base, exp, mod):
@@ -20,7 +33,7 @@ def puissance_mod_n(base, exp, mod):
 class Exchange:
     def __init__(self):
         print("START")
-        lignes_fichier = getPandG()
+        lignes_fichier = getPandG(input_file)
         self.p = int(lignes_fichier[0])
         self.g = int(lignes_fichier[1])
         self.queue = queue.Queue()
@@ -72,10 +85,11 @@ class Exchange:
 
     def eve(self):
         print("Eve commence à écouter la file d'attente...")
-        listes_messages = list()
+        listes_messages = []
         while not self.stop_event.is_set() or not self.queue.empty():
             try:
                 message = self.queue.queue[0]  # Attend un message
+                print(self.queue.queue)
                 listes_messages.append(message)
                 print(f"Eve intercepte un message {message}")
                 time.sleep(2)
