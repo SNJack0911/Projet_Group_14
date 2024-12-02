@@ -29,6 +29,9 @@ def puissance_mod_n(base, exp, mod):
         base = (base * base) % mod
     return result
 
+def write_to_file(file_name, content, write_mod):
+    with open(file_name, write_mod, encoding="utf-8") as file:
+        file.write(content)
 
 class Exchange:
     def __init__(self):
@@ -41,12 +44,12 @@ class Exchange:
         # Création des sémaphores
         self.semaphore_alice = threading.Semaphore(0)  # Alice attend Bob
         self.semaphore_bob = threading.Semaphore(0)    # Bob attend Alice
-            
+
     def alice(self):
         a = 6
         A = puissance_mod_n(self.g, a, self.p)
         print("Alice envoie A sur le réseau:", A)
-        
+
         # Envoyer A à Bob et débloquer son sémaphore
         self.queue.put(A)
         time.sleep(1)
@@ -60,6 +63,7 @@ class Exchange:
         K = puissance_mod_n(B, a, self.p)
         print("Alice connaît p = ", self.p, ", g = ", self.g, ", a = ", a, ", A = ", A, ", B = ", B)
         print("Clé secrète d'Alice:", K)
+        write_to_file(output_file, f"Clé secrète d'Alice: {K}\n","a")
 
     def bob(self):
         b = 15
@@ -70,7 +74,7 @@ class Exchange:
         A = self.queue.get()
         B = puissance_mod_n(self.g, b, self.p)
         print("Bob envoie B sur le réseau:", B)
-        
+
         # Envoyer B à Alice et débloquer son sémaphore
         self.queue.put(B)
         time.sleep(1)
@@ -80,6 +84,7 @@ class Exchange:
         K = puissance_mod_n(A, b, self.p)
         print("Bob connaît p = ", self.p, ", g = ", self.g, ", b = ", b, ", A = ", A, ", B = ", B)
         print("Clé secrète de Bob:", K)
+        write_to_file(output_file, f"Clé secrète de Bob: {K}\n", "w")
         # Signaler à Eve que l'échange est terminé
         self.stop_event.set()
 
@@ -89,7 +94,6 @@ class Exchange:
         while not self.stop_event.is_set() or not self.queue.empty():
             try:
                 message = self.queue.queue[0]  # Attend un message
-                print(self.queue.queue)
                 listes_messages.append(message)
                 print(f"Eve intercepte un message {message}")
                 time.sleep(2)
@@ -98,7 +102,7 @@ class Exchange:
         print("Eve connaît p = ", self.p, ", g = ", self.g, ", A = ", listes_messages[0], ", B = ", listes_messages[1])
         print("Clé secrète: ...")
         print("Fin de l'écoute")
-    
+
 
 
 # Création de l'échange Diffie-Hellman
