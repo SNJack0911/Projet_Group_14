@@ -46,7 +46,7 @@ class Exchange:
         self.semaphore_bob = threading.Semaphore(0)    # Bob attend Alice
 
     def alice(self):
-        a = 6
+        a = random.randint(1, 100)
         A = puissance_mod_n(self.g, a, self.p)
         print("Alice envoie A sur le réseau:", A)
 
@@ -66,7 +66,7 @@ class Exchange:
         write_to_file(output_file, f"Clé secrète d'Alice: {K}\n","a")
 
     def bob(self):
-        b = 15
+        b = random.randint(1, 100)
         # Attendre qu'Alice envoie A
         self.semaphore_bob.acquire()  # Bob attend que Alice ait envoyé A
 
@@ -77,7 +77,7 @@ class Exchange:
 
         # Envoyer B à Alice et débloquer son sémaphore
         self.queue.put(B)
-        time.sleep(1)
+        time.sleep(2)
         self.semaphore_alice.release()  # Permet à Alice de récupérer B
 
         # Calculer la clé secrète
@@ -96,7 +96,7 @@ class Exchange:
                 message = self.queue.queue[0]  # Attend un message
                 listes_messages.append(message)
                 print(f"Eve intercepte un message {message}")
-                time.sleep(2)
+                time.sleep(1)
             except queue.Empty:
                 continue  # Réessayer si la file est vide
         print("Eve connaît p = ", self.p, ", g = ", self.g, ", A = ", listes_messages[0], ", B = ", listes_messages[1])
@@ -119,6 +119,11 @@ bob_thread.start()
 eve_thread.start()
 
 # Attendre que les threads terminent
+alice_thread.join()
+bob_thread.join()
+eve_thread.join()
+
+# Wait for threads to complete
 alice_thread.join()
 bob_thread.join()
 eve_thread.join()

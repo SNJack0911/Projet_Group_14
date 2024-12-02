@@ -36,6 +36,7 @@ int main(int argc, char *argv[]) {
                 return 1;
         }
     }
+    
     FILE *output_fd = fopen(output_file, "w");
     if (!output_fd) {
         perror("Error opening output file");
