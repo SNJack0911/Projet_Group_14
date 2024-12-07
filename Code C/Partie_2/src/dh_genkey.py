@@ -57,7 +57,7 @@ class Exchange:
 
         # Send A to Bob and unblock his semaphore
         self.queue.put(A)
-        time.sleep(1)
+        time.sleep(2)
         self.semaphore_bob.release()
 
         # Wait for Bob to send B
@@ -67,7 +67,7 @@ class Exchange:
         B = self.queue.get()
         K = puissance_mod_n(B, a, self.p)
         print(f"Alice connaît: p = {self.p}, g = {self.g}, a = {a}, A = {A}, B = {B}")
-        print("Clé secrète d'Alice:", K)
+        print("Clé secrète de Bob:", K)
 
     def bob(self):
         b = random.randint(1, 100)
@@ -80,13 +80,13 @@ class Exchange:
 
         # Send B to Alice and unblock her semaphore
         self.queue.put(B)
-        time.sleep(1)
+        time.sleep(3)
         self.semaphore_alice.release()
 
         # Calculate the secret key
         K = puissance_mod_n(A, b, self.p)
         print(f"Bob connaît: p = {self.p}, g = {self.g}, b = {b}, A = {A}, B = {B}")
-        print("Clé secrète de Bob:", K)
+        print("Clé secrète de Alice:", K)
 
         # Signal to Eve that the exchange is done
         self.stop_event.set()
@@ -97,13 +97,13 @@ class Exchange:
         while not self.stop_event.is_set() or not self.queue.empty():
             try:
                 message = self.queue.queue[0]  # Attend un message
-                print(self.queue.queue)
-                listes_messages.append(message)
-                print(f"Eve intercepte un message {message}")
+                if message not in listes_messages:
+                    listes_messages.append(message)
+                    print(f"Eve intercepte un message {message}")
                 time.sleep(3)
             except queue.Empty:
                 continue  # Réessayer si la file est vide
-        print("Eve connaît p = ", self.p, ", g = ", self.g, ", A = ", listes_messages[0], ", B = ", listes_messages[1])
+        print("Eve connaît A = ", listes_messages[0], ", B = ", listes_messages[1])
         print("Clé secrète: ...")
         print("Fin de l'écoute")
 

@@ -2,11 +2,14 @@ CC = gcc
 CFLAGS = -std=c99 -Werror -Wextra -Wall -pedantic
 LDFLAGS =
 
+SRC_DIR = src
+BIN_DIR = bin
+
 EXEC_MAIN_GEN = dh_gen_group
 
-SRC_MAIN_GEN = $(wildcard *.c)
+SRC_MAIN_GEN = $(wildcard $(SRC_DIR)/*.c)
 
-OBJ_MAIN_GEN = $(SRC_MAIN_GEN:.c=.o)
+OBJ_MAIN_GEN = $(patsubst $(SRC_DIR)/%.c, $(BIN_DIR)/%.o, $(SRC_MAIN_GEN))
 
 ECHO = @
 
@@ -25,16 +28,19 @@ all: $(EXEC_MAIN_GEN)
 $(EXEC_MAIN_GEN): $(OBJ_MAIN_GEN)
 	$(ECHO)$(CC) -o $(EXEC_MAIN_GEN) $(OBJ_MAIN_GEN) $(LDFLAGS)
 
-%.o: %.c
+$(BIN_DIR)/%.o: $(SRC_DIR)/%.c | $(BIN_DIR)
 	$(ECHO)$(CC) -o $@ -c $< $(CFLAGS)
+
+$(BIN_DIR):
+	$(ECHO)mkdir -p $(BIN_DIR)
 
 .PHONY: clean mrproper
 
 clean:
-	$(ECHO)rm -f *.o
+	$(ECHO)rm -f $(BIN_DIR)/*.o
 
 mrproper: clean
 	$(ECHO)rm -f $(EXEC_MAIN_GEN)
 
 # Specific file dependencies
-dh_gen_group.o: dh_gen_group.c dh_prime.c
+$(BIN_DIR)/dh_gen_group.o: $(SRC_DIR)/dh_gen_group.c $(SRC_DIR)/dh_prime.c
