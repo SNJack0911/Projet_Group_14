@@ -25,8 +25,6 @@ endif
 
 all: $(EXEC_MAIN_PART_1)
 
-partie_1: $(EXEC_MAIN_PART_1)
-
 $(EXEC_MAIN_PART_1): $(OBJ_MAIN_PART_1)
 	$(ECHO)$(CC) -o $(EXEC_MAIN_PART_1) $(OBJ_MAIN_PART_1) $(LDFLAGS)
 
@@ -42,7 +40,7 @@ clean:
 	$(ECHO)rm -f $(BIN_DIR)/*.o
 
 mrproper: clean
-	$(ECHO)rm -f $(EXEC_MAIN_PART_1) $(EXEC_METHOD_1) $(EXEC_METHOD_1_EXT) $(EXEC_METHOD_2)
+	$(ECHO)rm -f $(EXEC_MAIN_PART_1) 
 
 # Specific file dependencies
 $(BIN_DIR)/sym_crypt.o: $(SRC_DIR)/fonctions_annexes.h $(SRC_DIR)/sym_crypt.c

@@ -4,8 +4,8 @@ ko='\e[00;31m';
 wipe='\e[00m';
 ok='\e[01;32m';
 
-BASE=../
-TEST=./tests
+BASE=./
+TEST=./test/CRYPT
 RET=0
 
 function test_cipher_xor {
@@ -124,7 +124,7 @@ if [ "$#" -eq 0 ]
     echo "Lancement complet des tests"
     test cipher_xor;
     test decipher_xor;
-    # test cipher_cbc;
+    test cipher_cbc;
     # test decipher_cbc;
   else
     echo "Test de $1"
