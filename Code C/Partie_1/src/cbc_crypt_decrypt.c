@@ -7,283 +7,272 @@
 
 #define LEN_BLOC 16
 
+/* Global variables */
 
-/* Variables globales */
+FILE *plaintext_file;
+FILE *encrypted_file;
+char plaintext_block[LEN_BLOC+1];
+char decrypted_plaintext_block[LEN_BLOC+1];
+char previous_block[LEN_BLOC+1];
+char previous_decrypted_block[LEN_BLOC+1];
+char encrypted_block[LEN_BLOC+1];
+char decrypted_encrypted_block[LEN_BLOC+1];
+bool is_first_block = true;
 
-FILE *message_clair;
-FILE *message_chiffre;
-char bloc_clair[LEN_BLOC+1];
-char bloc_clair_dc[LEN_BLOC+1];
-char bloc_prec[LEN_BLOC+1];
-char bloc_prec_dc[LEN_BLOC+1];
-char bloc_chiffre[LEN_BLOC+1];
-char bloc_chiffre_dc[LEN_BLOC+1];
-bool first_bloc = true;
+/* Functions for method 2 */
 
-/* Fonctions pour la methode 2*/
+void format_key(char * key) {
+  /* Function to take a string and transform it
+  into a string of size LEN_BLOC by either truncating or
+  repeating the string. */
 
-void formater_key(char * key){
-  /* Fonction prennant une chaine de caractère et la transforme 
-  en une chaine de taille LEN_BLOC soit en troquant ou en 
-  répétant la la chaine de caractère. */
-  
-  int taille_key = strlen(key);
+  int key_length = strlen(key);
   char new_key[LEN_BLOC+1];
-  for (int i =0; i< LEN_BLOC ; i++){
-    new_key[i]=key[i%taille_key];
+  for (int i = 0; i < LEN_BLOC; i++) {
+    new_key[i] = key[i % key_length];
   }
   new_key[LEN_BLOC] = '\0';
-  memcpy(key,new_key,LEN_BLOC+1);
+  memcpy(key, new_key, LEN_BLOC+1);
 }
 
-void afficher_bloc_hex(const char *bloc, size_t taille) {
-    // Fonction transformant une chaine de caractère en un code hexadécimal
-  
-    printf("Bloc : ");
-    for (size_t i = 0; i < taille; i++) {
-        printf("%02X ", (unsigned char)bloc[i]);
+void display_block_hex(const char *block, size_t size) {
+    // Function to transform a string into a hexadecimal code
+
+    printf("Block: ");
+    for (size_t i = 0; i < size; i++) {
+        printf("%02X ", (unsigned char)block[i]);
     }
     printf("\n");
 }
 
-/* Fonctions cryptage */
+/* Encryption functions */
 
+int write_encrypted_message() {
+    // Direct writing of encrypted bytes into the binary file
 
-int construct_crypt_message(){
-    // Écriture directe des octets chiffrés dans le fichier binaire
-    
-    // afficher_bloc_hex(bloc_chiffre, LEN_BLOC);
-    if (fwrite(bloc_chiffre, 1, LEN_BLOC, message_chiffre) != LEN_BLOC) {
-        perror("Erreur write");
+    if (fwrite(encrypted_block, 1, LEN_BLOC, encrypted_file) != LEN_BLOC) {
+        perror("Error writing to file");
         return 6;
     }
     return 0;
 }
 
-void chiffrer_message(char * vecteur,char * key){
-    // Cryptage du bloc clair avec la méthode de chiffrage XOR
-    
-    char bloc_middle[LEN_BLOC];
+void encrypt_message(char *vector, char *key) {
+    // Encrypt the plaintext block using XOR encryption method
+
+    char middle_block[LEN_BLOC];
     int i;
-    if(first_bloc){
-        first_bloc = false;
-        for(i = 0; i < LEN_BLOC; i++){
-            bloc_middle[i] = vecteur[i] ^ bloc_clair[i];
+    if (is_first_block) {
+        is_first_block = false;
+        for (i = 0; i < LEN_BLOC; i++) {
+            middle_block[i] = vector[i] ^ plaintext_block[i];
         }
-    }else{
-        for(i = 0; i < LEN_BLOC; i++){
-            bloc_middle[i] = bloc_prec[i] ^ bloc_clair[i];
+    } else {
+        for (i = 0; i < LEN_BLOC; i++) {
+            middle_block[i] = previous_block[i] ^ plaintext_block[i];
         }
     }
     for (int i = 0; i < LEN_BLOC; i++) {
-        bloc_chiffre[i] = key[i] ^ bloc_middle[i];
+        encrypted_block[i] = key[i] ^ middle_block[i];
     }
 }
 
-int cbc_crypt(char *fichier_clair, char * vecteur, char * key, char * fichier_chiffre) {
-    /* Fonction principale de cryptage 
+int cbc_encrypt(char *plaintext_filename, char *vector, char *key, char *encrypted_filename) {
+    /* Main encryption function
 
-    Param
-    fichier_clair : fichier clair dont le contenu va être crypté,
-    vecteur : vecteur d'initialisation de taille 16o,
-    key : clé de  chiffrement,
-    fichier_chiffre : fichier dans lequel sera écrit le contenu crypté,
+    Parameters:
+    plaintext_filename: file containing plaintext to be encrypted,
+    vector: initialization vector of size 16 bytes,
+    key: encryption key,
+    encrypted_filename: file where the encrypted content will be written.
 
-    Cette fonction ouvre fichier_clair et litson contenu, par bloc de 16o.
-    A chaque lecture, le bloc lu va être crypté par la fonction chiffrer_message 
-    et écrit dans fichier_chiffre
+    This function opens the plaintext file and reads its content block by block (16 bytes).
+    Each block is encrypted using the encrypt_message function
+    and written to the encrypted file.
     */
-    
-    printf("Ouverture fichiers\n");
-    message_clair = fopen(fichier_clair, "rb");
-    message_chiffre = fopen(fichier_chiffre, "wb");
 
-    printf("Fichiers ouverts\n");
-    size_t bits_lus;
-    first_bloc = true;
+    printf("Opening files\n");
+    plaintext_file = fopen(plaintext_filename, "rb");
+    encrypted_file = fopen(encrypted_filename, "wb");
 
-    if (!message_clair || !message_chiffre) {
-        if (message_clair) fclose(message_clair);  // Ferme seulement si le fichier est ouvert
-        if (message_chiffre) fclose(message_chiffre);
-        perror("Erreur ouverture fichier");
+    printf("Files opened\n");
+    size_t bits_read;
+    is_first_block = true;
+
+    if (!plaintext_file || !encrypted_file) {
+        if (plaintext_file) fclose(plaintext_file);
+        if (encrypted_file) fclose(encrypted_file);
+        perror("Error opening file");
         return 1;
     }
 
-
-    if(strlen(key) < LEN_BLOC){
-        formater_key(key);
+    if (strlen(key) < LEN_BLOC) {
+        format_key(key);
     }
-    printf("Ma clé : %s\n",key);
+    printf("Key: %s\n", key);
 
-    while ((bits_lus = fread(bloc_clair, 1, LEN_BLOC, message_clair)) > 0) {
-        if (bits_lus < LEN_BLOC) {
-            if(bloc_clair[bits_lus-1] == '\n'){
-                bloc_clair[bits_lus-1] = ' ';
+    while ((bits_read = fread(plaintext_block, 1, LEN_BLOC, plaintext_file)) > 0) {
+        if (bits_read < LEN_BLOC) {
+            if (plaintext_block[bits_read - 1] == '\n') {
+                plaintext_block[bits_read - 1] = ' ';
             }
-            memset(bloc_clair + bits_lus, ' ', LEN_BLOC - bits_lus);
+            memset(plaintext_block + bits_read, ' ', LEN_BLOC - bits_read);
         }
-        bloc_clair[LEN_BLOC] = '\0';
-        // printf("bloc clair : %s", bloc_clair);
-        chiffrer_message(vecteur,key);
-        memcpy(bloc_prec, bloc_chiffre, LEN_BLOC); //copie bloc_chiffre dans bloc_prec
+        plaintext_block[LEN_BLOC] = '\0';
+        encrypt_message(vector, key);
+        memcpy(previous_block, encrypted_block, LEN_BLOC);
         int result;
-        if((result = construct_crypt_message()) != 0){
+        if ((result = write_encrypted_message()) != 0) {
             return result;
         }
     }
-    fclose(message_clair);
-    fclose(message_chiffre);
+    fclose(plaintext_file);
+    fclose(encrypted_file);
     return 0;
 }
 
-/* Fonctions décryptage */
+/* Decryption functions */
 
-void dechiffrer_message(char *vecteur, char *key){
-    // Decryptage du bloc chiffre avec la méthode de chiffrage XOR
-    
-    char bloc_middle_dc[LEN_BLOC];
+void decrypt_message(char *vector, char *key) {
+    // Decrypt the encrypted block using XOR decryption method
+
+    char middle_decrypted_block[LEN_BLOC];
     int i;
 
-    // XOR avec la clé pour obtenir le bloc middle
     for (i = 0; i < LEN_BLOC; i++) {
-        bloc_middle_dc[i] = bloc_chiffre_dc[i] ^ key[i];
+        middle_decrypted_block[i] = decrypted_encrypted_block[i] ^ key[i];
     }
 
-    // Si c'est le premier bloc, XOR avec le vecteur d'initialisation
-    if (first_bloc) {
-        first_bloc = false;
+    if (is_first_block) {
+        is_first_block = false;
         for (i = 0; i < LEN_BLOC; i++) {
-            bloc_clair_dc[i] = bloc_middle_dc[i] ^ vecteur[i];
+            decrypted_plaintext_block[i] = middle_decrypted_block[i] ^ vector[i];
         }
     } else {
-        // Pour les blocs suivants, XOR avec le bloc chiffré précédent
         for (i = 0; i < LEN_BLOC; i++) {
-            bloc_clair_dc[i] = bloc_middle_dc[i] ^ bloc_prec_dc[i];
+            decrypted_plaintext_block[i] = middle_decrypted_block[i] ^ previous_decrypted_block[i];
         }
     }
 }
 
-int construct_decrypt_message() {
-    // Écriture directe des octets déchiffrés dans le fichier binaire
-    
-    bloc_clair_dc[LEN_BLOC] = '\0';
-    // printf("Bloc clair : %s\n", bloc_clair_dc);
-    if (fwrite(bloc_clair_dc, 1, LEN_BLOC, message_clair) != LEN_BLOC) {
-        perror("Erreur write");
+int write_decrypted_message() {
+    // Direct writing of decrypted bytes into the binary file
+
+    decrypted_plaintext_block[LEN_BLOC] = '\0';
+    if (fwrite(decrypted_plaintext_block, 1, LEN_BLOC, plaintext_file) != LEN_BLOC) {
+        perror("Error writing to file");
         return 1;
     }
     return 0;
 }
 
-int cbc_uncrypt(char *fichier_chiffre, char *vecteur, char *key, char *fichier_dechiffre) {
-    /* Fonction principale de décryptage 
+int cbc_decrypt(char *encrypted_filename, char *vector, char *key, char *decrypted_filename) {
+    /* Main decryption function
 
-    Param
-    fichier_chiffre : fichier crypté dont le contenu va être décrypté,
-    vecteur : vecteur d'initialisation de taille 16o,
-    key : clé de déchiffrement identique à celle utilisée pour le chiffrement ,
-    fichier_dechiffre : fichier dans lequel sera écrit le contenu décrypté,
+    Parameters:
+    encrypted_filename: file containing encrypted content to be decrypted,
+    vector: initialization vector of size 16 bytes,
+    key: decryption key identical to the one used for encryption,
+    decrypted_filename: file where the decrypted content will be written.
 
-    Cette fonction ouvre fichier_chiffre et lit son contenu, par bloc de 16o.
-    A chaque lecture, le bloc lu va être décrypter par la fonction dechiffrer_message 
-    et écrit dans fichier_dechiffre
+    This function opens the encrypted file and reads its content block by block (16 bytes).
+    Each block is decrypted using the decrypt_message function
+    and written to the decrypted file.
     */
-    
-    printf("Ouverture fichiers\n");
-    message_chiffre = fopen(fichier_chiffre, "rb");
-    message_clair = fopen(fichier_dechiffre, "wb");
-    printf("Fichiers ouverts\n");
-    size_t bits_lus;
-    first_bloc = true;
 
-    if (!message_chiffre || !message_clair) {
-        fclose(message_chiffre);
-        fclose(message_clair);
-        perror("Erreur ouverture fichier");
+    printf("Opening files\n");
+    encrypted_file = fopen(encrypted_filename, "rb");
+    plaintext_file = fopen(decrypted_filename, "wb");
+    printf("Files opened\n");
+    size_t bits_read;
+    is_first_block = true;
+
+    if (!encrypted_file || !plaintext_file) {
+        fclose(encrypted_file);
+        fclose(plaintext_file);
+        perror("Error opening file");
         return 2;
     }
 
     if (strlen(key) < LEN_BLOC) {
-        formater_key(key);
+        format_key(key);
     }
-    printf("Ma clé : %s\n", key);
+    printf("Key: %s\n", key);
 
-    while ((bits_lus = fread(bloc_chiffre_dc, 1, LEN_BLOC, message_chiffre)) > 0) {
-        if (bits_lus != LEN_BLOC) {
-          perror("Erreur fread cbc_decrypt");
+    while ((bits_read = fread(decrypted_encrypted_block, 1, LEN_BLOC, encrypted_file)) > 0) {
+        if (bits_read != LEN_BLOC) {
+          perror("Error reading file in cbc_decrypt");
           return 9;
         }
-        // printf("bloc chiffré : %s\n", bloc_chiffre_dc);
-        // afficher_bloc_hex(bloc_chiffre_dc,LEN_BLOC);
 
-        dechiffrer_message(vecteur, key);
-
-        memcpy(bloc_prec_dc, bloc_chiffre_dc, LEN_BLOC); // sauvegarde du bloc chiffré
-        int resultat;
-        if ((resultat = construct_decrypt_message()) != 0) {
-            return resultat;
+        decrypt_message(vector, key);
+        memcpy(previous_decrypted_block, decrypted_encrypted_block, LEN_BLOC);
+        int result;
+        if ((result = write_decrypted_message()) != 0) {
+            return result;
         }
     }
 
-    fclose(message_chiffre);
-    fclose(message_clair);
+    fclose(encrypted_file);
+    fclose(plaintext_file);
     return 0;
 }
-void test_cbc(){
-    // Fonction de test de la méthode de chiffrement/déchiffrement CBC
-    
+
+void test_cbc() {
+    // Test function for the CBC encryption/decryption method
+
     char *key = (char *)gen_key(LEN_BLOC);
-    printf("Key : %s\n", key);
-    char vecteur[LEN_BLOC] = "abcdefghijklmnop";
-    
-    // Cryptage
-    printf("Cryptage CBC fiche : msg1.txt\n");
-    cbc_crypt("test_files/msg1.txt", vecteur, key, "encrypted_files/cbc_msg1_crypt.txt");
-    
-    // Décryptage
-    cbc_uncrypt("encrypted_files/cbc_msg1_crypt.txt", vecteur, key, "decrypted_files/cbc_decrypt_msg1.txt");
-    
-    // Vérification du déchiffrement
-    FILE *fichier_clair = fopen("test_files/msg1.txt", "r");
-    FILE *fichier_dechiffre = fopen("decrypted_files/cbc_decrypt_msg1.txt", "r");
-    if (!fichier_clair || !fichier_dechiffre) {
-        perror("Erreur ouverture fichier");
+    printf("Key: %s\n", key);
+    char vector[LEN_BLOC] = "abcdefghijklmnop";
+
+    // Encryption
+    printf("CBC Encryption for file: msg1.txt\n");
+    cbc_encrypt("test_files/msg1.txt", vector, key, "encrypted_files/cbc_msg1_encrypt.txt");
+
+    // Decryption
+    cbc_decrypt("encrypted_files/cbc_msg1_encrypt.txt", vector, key, "decrypted_files/cbc_decrypt_msg1.txt");
+
+    // Verification of decryption
+    FILE *original_file = fopen("test_files/msg1.txt", "r");
+    FILE *decrypted_file = fopen("decrypted_files/cbc_decrypt_msg1.txt", "r");
+    if (!original_file || !decrypted_file) {
+        perror("Error opening file");
         return;
     }
-    
-    char buffer_clair[256];
-    char buffer_dechiffre[256];
-    // Read the original (plaintext) file
-    if (fgets(buffer_clair, 256, fichier_clair) == NULL) {
-        perror("Erreur de lecture du fichier original");
-        fclose(fichier_clair);
-        fclose(fichier_dechiffre);
+
+    char original_buffer[256];
+    char decrypted_buffer[256];
+
+    if (fgets(original_buffer, 256, original_file) == NULL) {
+        perror("Error reading original file");
+        fclose(original_file);
+        fclose(decrypted_file);
         free(key);
         key = NULL;
         return;
     }
 
-    // Read the decrypted file
-    if (fgets(buffer_dechiffre, 256, fichier_dechiffre) == NULL) {
-        perror("Erreur de lecture du fichier déchiffré");
-        fclose(fichier_clair);
-        fclose(fichier_dechiffre);
+    if (fgets(decrypted_buffer, 256, decrypted_file) == NULL) {
+        perror("Error reading decrypted file");
+        fclose(original_file);
+        fclose(decrypted_file);
         free(key);
         key = NULL;
         return;
-}
-    
-    if (strcmp(buffer_clair, buffer_dechiffre) == 0) {
-        printf("Test CBC Valide: Déchiffrement identique au message initial.\n");
-    } else {
-        printf("Test CBC Non-valide: Déchiffrement incorrect.\n");
     }
-    
-    fclose(fichier_clair);
-    fclose(fichier_dechiffre);
+
+    if (strcmp(original_buffer, decrypted_buffer) == 0) {
+        printf("CBC Test Passed: Decryption matches original message.\n");
+    } else {
+        printf("CBC Test Failed: Decryption does not match original message.\n");
+    }
+
+    fclose(original_file);
+    fclose(decrypted_file);
     free(key);
     key = NULL;
 }
+
 // int main(void){
 //     test_cbc();
 //     return 0;
