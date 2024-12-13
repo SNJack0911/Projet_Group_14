@@ -53,16 +53,6 @@ void cartesianProductRecursive(char **sets, int *sizes, char *result, int index,
     }
 }
 
-// Function to perform XOR encryption with a one-time pad (mask jetable)
-void xor_crypted(const char *msg, char *crypted, int key_length, char *key) {
-    unsigned char buffer_key[key_length + 1];
-    // Chiffrer chaque caractère
-    for (int i = 0; i < key_length; i++) {
-        crypted[i] = msg[i] ^ key[i%strlen(key)];
-    }
-    crypted[key_length] = '\0';  // Terminer la chaîne par le caractère nul
-}
-
 
 // Function to test the xor_crypted encryption and decryption
 void test_xor_crypted(const char *msg) {
