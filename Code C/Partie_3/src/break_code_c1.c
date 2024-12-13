@@ -109,7 +109,7 @@ void test_xor_crypted(const char *msg) {
       sizes[i]=nbre;
       printf("]\n");
     }
-    FILE *file = fopen("listclefsadmissible.c", "w");
+    FILE *file = fopen("listclefsadmissible.txt", "w");
     cartesianProductRecursive(clef,sizes,result,0,TAILLE_CLEF,file);
     fclose(file);
 }
